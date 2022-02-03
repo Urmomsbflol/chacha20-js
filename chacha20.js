@@ -14,7 +14,7 @@ const QR = (z, a, b, c, d) => {
     z[c] >>>= 0;
     z[d] >>>= 0;
 }
-const chacha20_keystream = (_key, _nonce, counter) => {
+const chacha20_keystream = (_key, _nonce, counter, stream) => {
     var state = [];
     //Constant
     state[0] = 1634760805;
@@ -50,7 +50,6 @@ const chacha20_keystream = (_key, _nonce, counter) => {
         QR(temp, 3, 4, 9, 14);	// diagonal 4 
         //
     }
-    var stream = [];
 
     for (let i = 0, i2 = 0; i < 16; i++) {
         state[i] += temp[i];
@@ -62,18 +61,18 @@ const chacha20_keystream = (_key, _nonce, counter) => {
     }
     state = null;
     temp = null;
-
-    return stream;
 }
 const chacha20_xor = (_key, _nonce, counter, plaintext) => {
-    var keystream = chacha20_keystream(_key, _nonce, counter);
+    var keystream = [];
+    chacha20_keystream(_key, _nonce, counter, keystream);
     let pos = 0;
     for (let i = 0; i < plaintext.length; i++) {
         if (pos === 64) {
             counter++;
-            keystream = chacha20_keystream(_key, _nonce, counter);
+            chacha20_keystream(_key, _nonce, counter, keystream);
             pos = 0;
         }
         plaintext[i] ^= keystream[pos++];
     }
+    keystream = null;
 }
